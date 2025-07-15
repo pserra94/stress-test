@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  stresstest:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: stresstest:latest
+    container_name: stresstest
+    # Remova os comentários e configure conforme necessário
+    # command: ["--url=https://httpbin.org/get", "--requests=100", "--concurrency=10"]
+    
+    # Para teste interativo, descomente as linhas abaixo:
+    # stdin_open: true
+    # tty: true
+    
+    # Variáveis de ambiente (opcional)
+    environment:
+      - HTTP_TIMEOUT=30s
+    
+    # Limites de recursos (opcional)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    
+    # Network para isolamento (opcional)
+    networks:
+      - stresstest-network
+
+networks:
+  stresstest-network:
+    driver: bridge
+
+# Exemplos de uso:
+# 
+# 1. Build da imagem:
+#    docker-compose build
+#
+# 2. Executar teste específico:
+#    docker-compose run --rm stresstest --url=https://google.com --requests=100 --concurrency=10
+#
+# 3. Executar teste com configuração no docker-compose.yml:
+#    Descomente a linha 'command' acima e execute:
+#    docker-compose up
+#
+# 4. Executar teste interativo:
+#    docker-compose run --rm stresstest /bin/sh 

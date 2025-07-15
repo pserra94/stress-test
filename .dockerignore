@@ -1,0 +1,32 @@
+# Ignorar arquivos de build e cache
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Ignorar diretórios de dependências
+vendor/
+
+# Ignorar arquivos do Git
+.git
+.gitignore
+
+# Ignorar arquivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignorar arquivos de documentação
+README.md
+docs/
+
+# Ignorar arquivos de configuração local
+.env
+.env.local
+
+# Ignorar logs
+*.log 
