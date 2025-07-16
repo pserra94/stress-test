@@ -269,14 +269,28 @@ func (f *Formatter) printPerformanceMetrics(report *models.TestReport) {
 // printErrorSummary exibe um resumo dos erros encontrados
 func (f *Formatter) printErrorSummary(results []models.RequestResult) {
 	errorCount := make(map[string]int)
+	totalErrors := 0
 
 	for _, result := range results {
 		if result.Error != nil {
-			errorCount[result.Error.Error()]++
+			totalErrors++
+			// Agrupa erros similares por tipo
+			errorType := f.categorizeError(result.Error.Error())
+			errorCount[errorType]++
 		}
 	}
 
 	if len(errorCount) == 0 {
+		return
+	}
+
+	// Se há muitos erros (mais que 20), não mostra detalhes individuais
+	// pois o cluster de erros já fornece informação consolidada
+	if totalErrors > 20 {
+		fmt.Println("\n🚨 RESUMO DE ERROS DE REDE:")
+		fmt.Println(strings.Repeat("-", 35))
+		fmt.Printf("📊 Total de %d erros de rede/conectividade detectados\n", totalErrors)
+		fmt.Println("   💡 Veja detalhes consolidados na seção 'CLUSTER DE ERROS' acima")
 		return
 	}
 
@@ -302,6 +316,40 @@ func (f *Formatter) printErrorSummary(results []models.RequestResult) {
 		fmt.Printf("❌ %s\n", err.message)
 		fmt.Printf("   📊 %d ocorrências\n", err.count)
 		fmt.Println()
+	}
+}
+
+// categorizeError agrupa erros similares por categoria
+func (f *Formatter) categorizeError(errorMsg string) string {
+	errorMsg = strings.ToLower(errorMsg)
+
+	switch {
+	case strings.Contains(errorMsg, "connection refused"):
+		return "Erros de Conexão Recusada"
+	case strings.Contains(errorMsg, "timeout"):
+		return "Erros de Timeout"
+	case strings.Contains(errorMsg, "no such host"):
+		return "Erros de DNS/Host não encontrado"
+	case strings.Contains(errorMsg, "tls handshake"):
+		return "Erros de Handshake TLS/SSL"
+	case strings.Contains(errorMsg, "goaway") && strings.Contains(errorMsg, "enhance_your_calm"):
+		return "Erros de Rate Limiting (ENHANCE_YOUR_CALM)"
+	case strings.Contains(errorMsg, "stopped after") && strings.Contains(errorMsg, "redirects"):
+		return "Erros de Muitos Redirecionamentos"
+	case strings.Contains(errorMsg, "context deadline exceeded"):
+		return "Erros de Deadline/Timeout de Contexto"
+	case strings.Contains(errorMsg, "eof"):
+		return "Erros de Fim de Arquivo (EOF)"
+	case strings.Contains(errorMsg, "connection reset"):
+		return "Erros de Reset de Conexão"
+	case strings.Contains(errorMsg, "network is unreachable"):
+		return "Erros de Rede Inacessível"
+	default:
+		// Para outros erros, retorna uma versão simplificada
+		if len(errorMsg) > 80 {
+			return "Outros Erros de Rede"
+		}
+		return strings.Title(errorMsg)
 	}
 }
 
