@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   stresstest:
     build:
@@ -7,8 +5,14 @@ services:
       dockerfile: Dockerfile
     image: stresstest:latest
     container_name: stresstest
-    # Remova os comentários e configure conforme necessário
-    # command: ["--url=https://httpbin.org/get", "--requests=100", "--concurrency=10"]
+    
+    # Exemplo de configuração para testes com sucesso
+    # Descomente para usar:
+    # command: ["--url=https://httpbin.org/status/200", "--requests=50", "--concurrency=5"]
+    
+    # Exemplo de configuração para testes com erros
+    # Descomente para usar:
+    # command: ["--url=https://httpbin.org/status/404", "--requests=20", "--concurrency=3"]
     
     # Para teste interativo, descomente as linhas abaixo:
     # stdin_open: true
@@ -32,21 +36,70 @@ services:
     networks:
       - stresstest-network
 
+  # Exemplo de serviço para testes de sucesso
+  test-success:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: stresstest:latest
+    container_name: test-success
+    command: ["--url=https://httpbin.org/status/200", "--requests=30", "--concurrency=5"]
+    networks:
+      - stresstest-network
+
+  # Exemplo de serviço para testes com erros
+  test-errors:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: stresstest:latest
+    container_name: test-errors
+    command: ["--url=https://httpbin.org/status/404", "--requests=20", "--concurrency=3"]
+    networks:
+      - stresstest-network
+
 networks:
   stresstest-network:
     driver: bridge
 
-# Exemplos de uso:
-# 
+# ================================================================================
+# GUIA DE USO - FORMAS DE EXECUTAR A APLICAÇÃO DOCKERIZADA
+# ================================================================================
+#
 # 1. Build da imagem:
 #    docker-compose build
 #
-# 2. Executar teste específico:
+# 2. Teste específico com docker-compose run:
 #    docker-compose run --rm stresstest --url=https://google.com --requests=100 --concurrency=10
 #
-# 3. Executar teste com configuração no docker-compose.yml:
-#    Descomente a linha 'command' acima e execute:
-#    docker-compose up
+# 3. Teste específico com docker run:
+#    docker run --rm stresstest:latest --url=https://google.com --requests=100 --concurrency=10
 #
-# 4. Executar teste interativo:
-#    docker-compose run --rm stresstest /bin/sh 
+# 4. Executar teste de sucesso pré-configurado:
+#    docker-compose up test-success
+#
+# 5. Executar teste de erros pré-configurado:
+#    docker-compose up test-errors
+#
+# 6. Executar teste personalizado editando o docker-compose.yml:
+#    Descomente a linha 'command' no serviço principal e execute:
+#    docker-compose up stresstest
+#
+# 7. Executar teste interativo:
+#    docker-compose run --rm stresstest /bin/sh
+#
+# 8. Exemplos de testes para demonstrar as melhorias:
+#
+#    a) Teste básico de sucesso:
+#       docker-compose run --rm stresstest --url=https://www.google.com --requests=50 --concurrency=5
+#
+#    b) Teste com erros 404:
+#       docker-compose run --rm stresstest --url=https://httpbin.org/status/404 --requests=20 --concurrency=3
+#
+#    c) Teste com múltiplos códigos (demonstra cluster de erros):
+#       docker-compose run --rm stresstest --url=https://httpbin.org/status/500 --requests=15 --concurrency=2
+#
+#    d) Teste de alta concorrência:
+#       docker-compose run --rm stresstest --url=https://www.google.com --requests=200 --concurrency=20
+#
+# ================================================================================ 
